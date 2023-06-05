@@ -116,8 +116,8 @@ int main(){
 
 //通过这个演示案例，可以看到UAF漏洞，在有的时候是可以让程序通过堆来对栈的内容进行操作，这里如果allocsize够大就有可能修改函数的返回值，大多数程序都会开启canary,
 //所以更常见的情况是修改变量的值
-
-
+//由于电脑上的麦克风坏了，这个视频是没有声音的，等后面去修一下或者换电脑。由于视频很容易就超过了25MB,所以将视频放在了b站。
+//https://www.bilibili.com/video/BV1PP411Q7mE/?spm_id_from=333.999.list.card_archive.click&vd_source=606ae05d54bec126270ba80f101537c0
 
 
 
