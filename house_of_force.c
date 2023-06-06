@@ -7,6 +7,13 @@
 #include <assert.h>
 
 //这个案例的主要思想并没有完全搞懂，通过指针把top chunk 的size的值改成最大值。再设置好下一次分配的内存大小，使得之后的内存分配从数据段变量bss_var处开始分配。
+
+//疑问：
+//将.data段当作堆内存分配出去后就有了堆的读写权限？
+
+//改变top chunk的size后，分配一个在非常大的数时候，超过了堆的大小堆是怎么分配的。
+//evil_size为 0xffffffffffffeca0 = (unsigned long)bss_var - sizeof(long)*4 - (unsigned long)ptr_top
+//这样是相当于反向分配了内存到 bss_var的位置吗
 char bss_var[] = "This is a string that we want to overwrite.";
 
 int main(int argc , char* argv[])
