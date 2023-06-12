@@ -20,11 +20,11 @@
 
 在创建函数中，判断的是v1<8 且 factory[v1]为真，但释放name指针后并没有将factory[v1]设置为假，造成了double free
 
-![1686535462987](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1686535462987.png)
+![1686535462987](./1686535462987.png)
 
 这里可以看出最大能申请9个gundam,且根据这个chunk的大小，刚好有一个free chunk 可以挂到unsortedbin中，只要控制好输入name的字符数不超过7个，就可以拿到bk中unsortedbin的地址。
 
-![1686536250382](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1686536250382.png)
+![1686536250382](./1686536250382.png)
 
 ![1686536084857](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1686536084857.png)
 
