@@ -109,7 +109,7 @@ blow up (blow up 才能真正销毁一个gundam，它主要设置了gundam的第
 
 最终是拿到shell
 
-![1686556411007](C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1686556411007.png)
+![1686556411007](./1686556411007.png)
 
 ### 总结
 
