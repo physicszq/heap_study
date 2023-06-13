@@ -58,5 +58,5 @@ int main(int argc , char* argv[])
 	assert(ctr_chunk == bss_var);
 
 
-	;
+	
 }
