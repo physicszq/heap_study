@@ -58,17 +58,5 @@ int main(int argc , char* argv[])
 	assert(ctr_chunk == bss_var);
 
 
-	// some further discussion:
-	//fprintf(stderr, "This controlled malloc will be called with a size parameter of evil_size = malloc_got_address - 8 - p2_guessed\n\n");
-	//fprintf(stderr, "This because the main_arena->top pointer is setted to current av->top + malloc_size "
-	//	"and we \nwant to set this result to the address of malloc_got_address-8\n\n");
-	//fprintf(stderr, "In order to do this we have malloc_got_address-8 = p2_guessed + evil_size\n\n");
-	//fprintf(stderr, "The av->top after this big malloc will be setted in this way to malloc_got_address-8\n\n");
-	//fprintf(stderr, "After that a new call to malloc will return av->top+8 ( +8 bytes for the header ),"
-	//	"\nand basically return a chunk at (malloc_got_address-8)+8 = malloc_got_address\n\n");
-
-	//fprintf(stderr, "The large chunk with evil_size has been allocated here 0x%08x\n",p2);
-	//fprintf(stderr, "The main_arena value av->top has been setted to malloc_got_address-8=0x%08x\n",malloc_got_address);
-
-	//fprintf(stderr, "This last malloc will be served from the remainder code and will return the av->top+8 injected before\n");
+	;
 }
