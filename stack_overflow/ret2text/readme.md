@@ -44,13 +44,13 @@ ida直接反汇编结果就可以看到main函数中有个不安全函数gets()
 
 通过shift + F12 可以查看程序中使用的字符串，可以看到'/bin/sh' 这个字符串，通过交叉引用可以看到另一段函数secure(),这里有system("/bin/sh"),返回值的覆盖就要用这个地址(0x0804863A)进行覆盖从而运行该函数。
 
-![img](H:\CVE_download\stack_overflow\02.PNG)
+![img](./02.PNG)
 
 ### 调试
 
 使用gdb调试,直接找到buf数组的起始地址到返回地址之间的距离，直接进行覆盖。
 
-![img](H:\CVE_download\stack_overflow\03.PNG)
+![img](./03.PNG)
 
 寄存器ebp的指向的值是上一个调用者的ebp值，所以距离是 0x6c + 4,覆盖的关键语句是 io.sendline(b'A' * (0x6c + 4) + p32(0x804863a))，输入后函数返回并执行0x804863a处的代码即
 
@@ -59,11 +59,11 @@ ida直接反汇编结果就可以看到main函数中有个不安全函数gets()
 .text:08048641                 call    _system
 ```
 
-![img](H:\CVE_download\stack_overflow\04.PNG)
+![img](./04.PNG)
 
 将上面的交互python语句写成文件，即expoit.py ,最终效果
 
-![](H:\CVE_download\stack_overflow\05.PNG)
+![img](./05.PNG)
 
 ### 总结
 
