@@ -32,7 +32,7 @@ svn checkout https://github.com/analogdevicesinc/no-OS/trunk/adv7511/zed
 
 ### 题目分析
 
-![img](H:\CVE_download\stack_overflow\00.PNG)
+![img]('./00.PNG')
 
 这是一个最简单的栈溢出题目 ret2text ,没有开启canary,也没有开启PIE,直接通过不安全函数gets(),使得读入的字符串直接覆盖掉函数的返回值到system函数，使得main函数返回时就会执行system('/bin/sh'),拿到shell。
 
