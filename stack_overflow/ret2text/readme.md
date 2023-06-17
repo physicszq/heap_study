@@ -32,7 +32,7 @@ svn checkout https://github.com/analogdevicesinc/no-OS/trunk/adv7511/zed
 
 ### 题目分析
 
-![img]('./00.PNG')
+![img](./00.PNG)
 
 这是一个最简单的栈溢出题目 ret2text ,没有开启canary,也没有开启PIE,直接通过不安全函数gets(),使得读入的字符串直接覆盖掉函数的返回值到system函数，使得main函数返回时就会执行system('/bin/sh'),拿到shell。
 
@@ -40,7 +40,7 @@ svn checkout https://github.com/analogdevicesinc/no-OS/trunk/adv7511/zed
 
 ida直接反汇编结果就可以看到main函数中有个不安全函数gets()
 
-![img](H:\CVE_download\stack_overflow\01.PNG)
+![img](./01.PNG)
 
 通过shift + F12 可以查看程序中使用的字符串，可以看到'/bin/sh' 这个字符串，通过交叉引用可以看到另一段函数secure(),这里有system("/bin/sh"),返回值的覆盖就要用这个地址(0x0804863A)进行覆盖从而运行该函数。
 
