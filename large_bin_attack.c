@@ -67,13 +67,21 @@ int main()
 //			P3->bk_nextsize->fd_nextsize = P3; //P3的bk_nextsize所指向的堆块的fd_nextsize要修改成P3的头指针
 //		}
 //  bck = P2->bk; //bck等于P2的bk
+//  现在已知条件是：
+//  P2->bk_nextsize->fd_nextsize = stack_var2_addr
+//  P3->bk_nextsize = P2->bk_nextsize
+//  P3->bk_nextsize->fd_nextsize = P3
 //  这里最终得到的stack_var2的值等于p3的的chunk
+    
 //  最后,执行
 //  mark_bin (av, victim_index);
 //  victim->bk = bck; //bck相当于p2的bk指针
 //  victim->fd = fwd; //victim是p3的头指针 chunk_p3
 //  fwd->bk = victim;
 //  bck->fd = victim;
+//  已知条件是：
+//  P2->bk->fd = stack_var1_addr
+//  P2->bk->fd = P3
 //  最后得到stack_var2=p3的头指针
     malloc(0x90);
 
