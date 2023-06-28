@@ -14,22 +14,22 @@ PIE:      No PIE (0x8048000)
 
 通过ROPgadget来寻找合适的代码地址如下，我们可以找到一个 pop eax ; ret 的指令地址是 0x080bb196。依次类推寻找其他的指令地址，通过IDA直接可以得到字符串 "/bin/sh " 的地址。
 
-![](H:\CVE_download\stack_overflow\ret2system\02.PNG)
+![](./02.PNG)
 
 根据32位计算机函数传参的规定，eax用作了系统调用号，后面的参数依次由 edx, ecx, ebx, esi, edi来传参，为了简化操作，我们可以再寻找到的gadgets中选择一个组合指令的地址，这里我们选择地址 0x0806eb90。
 
-![](H:\CVE_download\stack_overflow\ret2system\03.PNG)
+![](./03.PNG)
 
 最后寻找int 0x80 指令的地址。
 
-![](H:\CVE_download\stack_overflow\ret2system\04.PNG)
+![](./04.PNG)
 
 之后，通过gdb调试来查看溢出的字节数，IDA上面显示的对ebp和esp和变量的距离有的时候是不准确的，调试可以准确的确定溢出的字节数，108再加上上一个函数的ebp的值所占的字节数，就是返回值的位置，之后按照调用规则依次往上溢出。
 
-![](H:\CVE_download\stack_overflow\ret2system\05.PNG)
+![](./05.PNG)
 
 最后的效果，并将其写成exp。
 
-![](H:\CVE_download\stack_overflow\ret2system\06.PNG)
+![](./06.PNG)
 
 总结，这是一个简单的使用ROP的例子，简单在于本题并没有开启PIE可以拿到固定的指令地址进行构造。如果开启了PIE，需要使用其他技术和工具来获取依赖关系和内存布局等信息，以在运行时动态地搜索并构造ROP链。例如，可以使用泄漏漏洞来获取程序的基地址，然后基于该基地址计算偏移量来搜索和构建ROP链。
